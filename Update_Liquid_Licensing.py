@@ -1,0 +1,40 @@
+"""
+General Pipeline
+
+1. Parse CSV for lines containing Stockton addresses
+    - May need to store in datframe, drop every other row
+
+2. Access the gdb and the layer
+
+3. For each line in datframe, update corresponding feature in layer
+
+"""
+from tkinter import filedialog
+import pandas as pd
+import numpy as np
+
+def extract_stockton_addresses() -> pd.DataFrame:
+    """
+    Extract Stockton addresses from CSV and store in dataframe for processing
+    """
+
+    #Read CSV into a dataframe
+    df = pd.read_csv(filedialog.askopenfilename(), skiprows=1)
+
+    #Ensure uniform formatting in city columns
+    df['Mail City'] = df['Mail City'].str.upper()
+    df['Prem City'] = df['Prem City'].str.upper()
+    df['Mail City'] = df['Mail City'].str.strip()
+    df['Prem City'] = df['Prem City'].str.strip()
+
+    #Keep rows that pertain to Stockton
+    condition = (df['Prem City'] == "STOCKTON") | (df['Mail City'] == "STOCKTON")
+    df = df.loc[condition]
+    print(df)
+    return df
+
+def main():
+    extract_stockton_addresses()
+
+if __name__ == "__main__":
+    main()
