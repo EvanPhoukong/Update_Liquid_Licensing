@@ -12,6 +12,12 @@ General Pipeline
 from tkinter import filedialog
 import pandas as pd
 import numpy as np
+import arcpy
+
+#Access geodatabase and allow editing of contents
+print("Please select the geodatabase to access.")
+arcpy.env.workspace = filedialog.askdirectory()
+arcpy.env.overwriteOutput = True
 
 def extract_stockton_addresses() -> pd.DataFrame:
     """
@@ -19,6 +25,7 @@ def extract_stockton_addresses() -> pd.DataFrame:
     """
 
     #Read CSV into a dataframe
+    print("Please select the CSV of liquor licenses to process.")
     df = pd.read_csv(filedialog.askopenfilename(), skiprows=1)
 
     #Ensure uniform formatting in city columns
