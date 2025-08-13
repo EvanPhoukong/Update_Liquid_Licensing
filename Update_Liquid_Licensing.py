@@ -17,7 +17,12 @@ import arcpy
 #Access geodatabase and allow editing of contents
 print("Please select the geodatabase to access.")
 arcpy.env.workspace = filedialog.askdirectory()
+layer = "LiquorLicenseLocations"
 arcpy.env.overwriteOutput = True
+
+#Initialize layer and update cursor
+fc = arcpy.env.workspace + '\\' + layer
+cursor = arcpy.UpdateCursor(fc)
 
 def extract_stockton_addresses() -> pd.DataFrame:
     """
@@ -40,8 +45,13 @@ def extract_stockton_addresses() -> pd.DataFrame:
     print(df)
     return df
 
+def update_feature(feature: pd.DataFrame) -> None:
+    pass
+
 def main():
-    extract_stockton_addresses()
+    df = extract_stockton_addresses()
+    for feature in df.values:
+        update_feature(feature)
 
 if __name__ == "__main__":
     main()
