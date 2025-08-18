@@ -4,9 +4,14 @@ General Pipeline
 1. Parse CSV for lines containing Stockton addresses
     - May need to store in datframe, drop every other row
 
+1. UPDATE: Need to account for the sphere of influence of Stockton
+    - Iterate through each line and see which one clips with sphere of influence?
+    - Possible use of locators here
+
 2. Access the gdb and the layer
 
-3. For each line in datframe, update corresponding feature in layer
+3. For each line in dataframe, update corresponding feature in layer
+    -Locator could be used to access every address possible, if iteration is not efficient
 
 """
 from tkinter import filedialog
@@ -14,13 +19,13 @@ import pandas as pd
 import numpy as np
 import arcpy
 
-#Access geodatabase and allow editing of contents
+#Initialize connection to geodatabase and allow editing of contents
 print("Please select the geodatabase to access.")
 arcpy.env.workspace = filedialog.askdirectory()
 layer = "LiquorLicenseLocations"
 arcpy.env.overwriteOutput = True
 
-#Initialize layer and update cursor
+#Initialize connection to layer and create update cursor
 fc = arcpy.env.workspace + '\\' + layer
 cursor = arcpy.UpdateCursor(fc)
 
