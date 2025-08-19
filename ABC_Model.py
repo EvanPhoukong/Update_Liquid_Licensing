@@ -2,13 +2,18 @@
 General Pipeline:
 
     1. Filter CSV for StocktonParcel Area (Call Function)
+
     2. Create Locator
+
     3. Geocode Addresses
+
     4. Make Query Table
         4.5. Convert table to Excel
+
     5. Make a copy the addresses table
         --TENTATIVE--
         5.5. Merge the copy with the LiquorLicenseLocations
+
 """
 
 
@@ -30,7 +35,7 @@ cursor = arcpy.UpdateCursor(fc)
 
 def filter_csv() -> str:
     """
-    Filter out all features not within StocktonParcelArea from CSV
+    Filter out all features not within StocktonParcelArea from CSV.
     """
 
     #Read CSV into a dataframe
@@ -56,12 +61,12 @@ def filter_csv() -> str:
 
 def create_locator() -> str:
     """
-    Create a point address locator
+    Create a point address locator.
     """
 
     #Set the parameters
     country_code = "USA"
-    reference_data = arcpy.env.workspace +'\\' + "Addresses"
+    reference_data = arcpy.env.workspace + '\\' + "Addresses"
     field_mapping =   'HouseNumber FROM AddressNumber,' \
                     + 'PrefixDirection FROM StreetDirectional,' \
                     + 'StreetName FROM StreetName,' \
@@ -82,7 +87,7 @@ def create_locator() -> str:
 
 def geocode_addresses(table: str, locator: str) -> str:
     """
-    Create a feature layer of address points given a table of addresses and locator
+    Create a feature layer of address points given a table of addresses and locator.
     """
 
     #Set the parameters
@@ -95,7 +100,22 @@ def geocode_addresses(table: str, locator: str) -> str:
 
     #Geocode the addresses
     arcpy.geocoding.GeocodeAddresses(table, locator, fields, layer)
+
     return layer
+
+
+def extract_unmatched_addresses(addrs):
+    """
+    Extract unmatched addresses into table.
+    """
+
+    #Set the parameters
+    table = arcpy.env.workspace + '\\' + 'unmatched_addresses'
+
+    #Geocode the addresses
+    arcpy.management.MakeQueryTable(addrs, table)
+
+    return table
 
 
 def main() -> None:
@@ -108,6 +128,15 @@ def main() -> None:
 
     #Step 3: Geocode Addresses
     abc_addrs = geocode_addresses(csv, locator)
+
+    #Step 4: Extract unmatched addresses into table
+    queryTable = extract_unmatched_addresses(abc_addrs)
+
+    #Remove intermediate layers
+    os.remove(csv)
+    os.remove(locator)
+    os.remove(abc_addrs)
+    os.remove(queryTable)
 
 
 if __name__ == "__main__":
