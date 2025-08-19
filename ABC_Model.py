@@ -19,8 +19,8 @@ import arcpy
 import Update_Liquid_Licensing as ULL
 import os
 
-
-arcpy.env.workspace = r"C:\Users\ephoukong\OneDrive - City of Stockton\Desktop\Training_Data\DB01_bak_20231018.gdb"
+print("Please select the geodatabase to access.")
+arcpy.env.workspace = filedialog.askdirectory()
 layer = "LiquorLicenseLocations"
 arcpy.env.overwriteOutput = True
 
@@ -28,12 +28,13 @@ arcpy.env.overwriteOutput = True
 fc = arcpy.env.workspace + '\\' + layer
 cursor = arcpy.UpdateCursor(fc)
 
-def filter_csv() -> None:
+def filter_csv() -> str:
     """
-    Extract Stockton addresses from CSV and store in dataframe for processing
+    Filter out all features not within StocktonParcelArea from CSV
     """
 
     #Read CSV into a dataframe
+    print("Please select the CSV of liquor licenses to process.")
     file_path = filedialog.askopenfilename()
     csv_path = os.path.dirname(file_path) + '\\' + 'filtered_csv'
     df = pd.read_csv(file_path, skiprows=1)
@@ -53,9 +54,12 @@ def filter_csv() -> None:
     return csv_path
 
 
-def create_locator():
+def create_locator() -> str:
+    """
+    Create a point address locator
+    """
 
-    #Set the Parameters
+    #Set the parameters
     country_code = "USA"
     reference_data = arcpy.env.workspace +'\\' + "Addresses"
     field_mapping =   'HouseNumber FROM AddressNumber,' \
@@ -76,18 +80,26 @@ def create_locator():
 
     return locator
 
-def geocode_addresses(table, locator):
+def geocode_addresses(table: str, locator: str) -> str:
+    """
+    Create a feature layer of address points given a table of addresses and locator
+    """
+
+    #Set the parameters
     fields =  'Address "Prem Addr 1" VISIBLE NONE;' \
             + 'Address2 "Prem Addr 2" VISIBLE NONE;' \
             + 'City "Prem City" VISIBLE NONE;' \
             + 'Region District VISIBLE NONE;' \
             + 'Postal "Prem Zip" VISIBLE NONE;'
     layer = arcpy.env.workspace + '\\' + 'ABC_Addresses'
+
+    #Geocode the addresses
     arcpy.geocoding.GeocodeAddresses(table, locator, fields, layer)
     return layer
 
 
-def main():
+def main() -> None:
+
     #Step 1: Filter CSV
     csv = filter_csv()
 
