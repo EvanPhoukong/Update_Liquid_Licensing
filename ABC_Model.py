@@ -28,6 +28,31 @@ arcpy.env.overwriteOutput = True
 fc = arcpy.env.workspace + '\\' + layer
 cursor = arcpy.UpdateCursor(fc)
 
+def filter_csv() -> None:
+    """
+    Extract Stockton addresses from CSV and store in dataframe for processing
+    """
+
+    #Read CSV into a dataframe
+    print("Please select the CSV of liquor licenses to process.")
+    file_path = filedialog.askopenfilename()
+    df = pd.read_csv(file_path, skiprows=1)
+
+    #Ensure uniform formatting in city columns
+    df['Mail City'] = df['Mail City'].str.upper()
+    df['Prem City'] = df['Prem City'].str.upper()
+    df['Mail City'] = df['Mail City'].str.strip()
+    df['Prem City'] = df['Prem City'].str.strip()
+
+    #Keep rows that pertain to Stockton
+    zips = [95202, 95203, 95204, 95205, 95206, 95207, 95209, 95210, 95211, 95212, 95215, 95219, 95231, 95240, 95242, 95330, 95336]
+    condition = (df['Prem City'] == "STOCKTON") | (df['Prem City'] == "FRENCH CAMP") | (df['Prem City'] == "LODI") | (df['Mail City'] == "STOCKTON")
+    #condition = (df['Prem Zip'])
+    #| (df['Prem City'] == "FRENCH CAMP") | (df['Prem City'] == "LODI") | (df['Mail City'] == "STOCKTON")
+    df = df.loc[condition]
+    df.to_csv(os.path.dirname(file_path), index=False)
+
+
 def create_locator():
 
     #Set the Parameters
@@ -46,7 +71,7 @@ def create_locator():
 
 def main():
     #Step 1: Filter CSV
-    ULL.main()
+    filter_csv()
 
     #Step 2: Create Locator
     create_locator()
