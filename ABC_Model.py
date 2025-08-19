@@ -34,8 +34,8 @@ def filter_csv() -> None:
     """
 
     #Read CSV into a dataframe
-    print("Please select the CSV of liquor licenses to process.")
     file_path = filedialog.askopenfilename()
+    csv_path = os.path.dirname(file_path) + '\\' + 'filtered_csv'
     df = pd.read_csv(file_path, skiprows=1)
 
     #Ensure uniform formatting in city columns
@@ -47,10 +47,10 @@ def filter_csv() -> None:
     #Keep rows that pertain to Stockton
     zips = [95202, 95203, 95204, 95205, 95206, 95207, 95209, 95210, 95211, 95212, 95215, 95219, 95231, 95240, 95242, 95330, 95336]
     condition = (df['Prem City'] == "STOCKTON") | (df['Prem City'] == "FRENCH CAMP") | (df['Prem City'] == "LODI") | (df['Mail City'] == "STOCKTON")
-    #condition = (df['Prem Zip'])
-    #| (df['Prem City'] == "FRENCH CAMP") | (df['Prem City'] == "LODI") | (df['Mail City'] == "STOCKTON")
     df = df.loc[condition]
-    df.to_csv(os.path.dirname(file_path), index=False)
+    df.to_csv(csv_path, index=False)
+
+    return csv_path
 
 
 def create_locator():
@@ -58,7 +58,13 @@ def create_locator():
     #Set the Parameters
     country_code = "USA"
     reference_data = arcpy.env.workspace +'\\' + "Addresses"
-    field_mapping = "HouseNumber FROM AddressNumber, PrefixDirection FROM StreetDirectional, StreetName FROM StreetName, SuffixType FROM StreetType, FullStreeetName FROM FullAddress, Unit FROM Suite, City FROM City, State FROM State"
+    field_mapping =   'HouseNumber FROM AddressNumber,' \
+                    + 'PrefixDirection FROM StreetDirectional,' \
+                    + 'StreetName FROM StreetName,' \
+                    + 'SuffixType FROM StreetType,' \
+                    + 'FullStreeetName FROM FullAddress,' \
+                    + 'Unit FROM Suite, City FROM City,' \
+                    + 'State FROM State'
     locator = r"C:\GIS\Project\ABCLocator.loc"
 
     #Delete old locator if it exists
@@ -68,13 +74,28 @@ def create_locator():
     #Create Locator
     arcpy.geocoding.CreateLocator(country_code, reference_data, field_mapping, locator)
 
+    return locator
+
+def geocode_addresses(table, locator):
+    fields =  'Address "Prem Addr 1" VISIBLE NONE;' \
+            + 'Address2 "Prem Addr 2" VISIBLE NONE;' \
+            + 'City "Prem City" VISIBLE NONE;' \
+            + 'Region District VISIBLE NONE;' \
+            + 'Postal "Prem Zip" VISIBLE NONE;'
+    layer = arcpy.env.workspace + '\\' + 'ABC_Addresses'
+    arcpy.geocoding.GeocodeAddresses(table, locator, fields, layer)
+    return layer
+
 
 def main():
     #Step 1: Filter CSV
-    filter_csv()
+    csv = filter_csv()
 
     #Step 2: Create Locator
-    create_locator()
+    locator = create_locator()
+
+    #Step 3: Geocode Addresses
+    abc_addrs = geocode_addresses(csv, locator)
 
 
 if __name__ == "__main__":
