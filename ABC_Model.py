@@ -126,13 +126,9 @@ def extract_unmatched_addresses(addrs) -> None:
 
     #Set the parameters
     table = arcpy.env.workspace + '\\' + 'Unmatched_addresses'
-    # keyField = "ABC_Geocoded_Addresses.ObjectID"
-    # fieldList = 
     where_clause = "ABC_Geocoded_Addresses.STATUS = 'U'"
 
-
     #Query the table for unmatched addresses
-    # arcpy.management.MakeQueryTable(addrs, table, "USE_KEY_FIELDS", keyField, fieldList, where_clause)
     arcpy.management.MakeQueryTable(addrs, table, "USE_KEY_FIELDS", where_clause=where_clause)
     
     return table
@@ -149,34 +145,39 @@ def convert_table_to_excel(table: str, folder: str) -> None:
     #Convert the table into an Excel Spreadsheet
     arcpy.conversion.TableToExcel(table, out_table)
 
+    return out_table
+
 
 def main() -> None:
 
     #Step 1: Filter CSV
     csv = filter_csv()
-    print("CSV DONE")
+    print("\n(1/6) CSV Filtered for StocktonParcelArea Addresses")
 
     #Step 2: Create Locator
     locator = create_locator()
-    print("LOCATOR DONE")
+    print("(2/6) Created Point Address Locator")
 
     #Step 3: Geocode Addresses
     abc_addrs = geocode_addresses(csv, locator)
-    print("GEOCODE DONE")
+    print("(3/6) Finished Geocoding Addresses")
 
     #Step 4: Extract unmatched addresses into table
     queryTable = extract_unmatched_addresses(abc_addrs)
-    print("QUERYTABLE DONE")
+    print("(4/6) Created Query Table")
 
-    #Step 5: Convert the table into an Excel Spreadsheet
-    convert_table_to_excel(queryTable, os.path.dirname(csv))
-    print("EXCEL DONE")
+    #Step 5: Convert the table into an Excel Worksheet
+    excel = convert_table_to_excel(queryTable, os.path.dirname(csv))
+    print("(5/6) Query Table Converted To Excel Worksheet")
+    print(f"\nThe UNMATCHED ADDRESSES can be found HERE: {excel}\n")
 
     #Remove intermediate layers
     os.remove(csv)
     os.remove(locator)
     arcpy.management.Delete(abc_addrs)
     arcpy.management.Delete(queryTable)
+    print("(6/6) Intermediate layers removed from File System")
+    print("Finished")
 
 
 if __name__ == "__main__":
