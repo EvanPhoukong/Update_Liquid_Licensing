@@ -111,9 +111,10 @@ def geocode_addresses(table: str, locator: str) -> str:
             + 'CountryCode <None> VISIBLE NONE;'
     
     layer = arcpy.env.workspace + '\\' + 'ABC_Geocoded_Addresses'
+    output_fields = "MINIMAL"
 
     #Geocode the addresses
-    arcpy.geocoding.GeocodeAddresses(table, locator, fields, layer)
+    arcpy.geocoding.GeocodeAddresses(table, locator, fields, layer, output_fields=output_fields)
 
     return layer
 
@@ -125,13 +126,28 @@ def extract_unmatched_addresses(addrs) -> None:
 
     #Set the parameters
     table = arcpy.env.workspace + '\\' + 'Unmatched_addresses'
+    # keyField = "ABC_Geocoded_Addresses.ObjectID"
+    # fieldList = 
+    where_clause = "ABC_Geocoded_Addresses.STATUS = 'U'"
 
-    where = "ABC_Geocoded_Addresses.STATUS = 'U'"
 
-    #Geocode the addresses
-    arcpy.management.MakeQueryTable(addrs, table, where_clause=where)
-
+    #Query the table for unmatched addresses
+    # arcpy.management.MakeQueryTable(addrs, table, "USE_KEY_FIELDS", keyField, fieldList, where_clause)
+    arcpy.management.MakeQueryTable(addrs, table, "USE_KEY_FIELDS", where_clause=where_clause)
+    
     return table
+
+
+def convert_table_to_excel(table: str, folder: str) -> None:
+    """
+    Convert the table into an Excel Spreadsheet
+    """
+
+    #Set the parameter
+    out_table = folder + '\\' + "Unmatched_Addresses.xlsx"
+    
+    #Convert the table into an Excel Spreadsheet
+    arcpy.conversion.TableToExcel(table, out_table)
 
 
 def main() -> None:
@@ -151,13 +167,16 @@ def main() -> None:
     #Step 4: Extract unmatched addresses into table
     queryTable = extract_unmatched_addresses(abc_addrs)
     print("QUERYTABLE DONE")
-    print(queryTable)
+
+    #Step 5: Convert the table into an Excel Spreadsheet
+    convert_table_to_excel(queryTable, os.path.dirname(csv))
+    print("EXCEL DONE")
 
     #Remove intermediate layers
-    # os.remove(csv)
-    # os.remove(locator)
-    # os.remove(abc_addrs)
-    # os.remove(queryTable)
+    os.remove(csv)
+    os.remove(locator)
+    arcpy.management.Delete(abc_addrs)
+    arcpy.management.Delete(queryTable)
 
 
 if __name__ == "__main__":
