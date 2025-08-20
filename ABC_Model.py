@@ -10,9 +10,10 @@ General Pipeline:
     4. Make Query Table
         4.5. Convert table to Excel
 
-    5. Make a copy the addresses table
-        --TENTATIVE--
-        5.5. Merge the copy with the LiquorLicenseLocations
+    5. Update LiquorLicenseLocations
+        -Truncate the table so only the metadata remains
+            -All data points should be removed
+        -Append the geocoded addresses that had a match to the layer
 
 """
 
@@ -21,7 +22,6 @@ from tkinter import filedialog
 import pandas as pd
 import numpy as np
 import arcpy
-import Update_Liquid_Licensing as ULL
 import os
 
 print("Please select the geodatabase to access.")
@@ -148,35 +148,72 @@ def convert_table_to_excel(table: str, folder: str) -> None:
     return out_table
 
 
+def create_field_map(addrs_name, target_name, type):
+
+    addrs = "ABC_Geocoded_Addresses"
+    target = "LiquorLicenseLocations"
+
+    fldMap = arcpy.FieldMap()
+
+    fldMap.addInputField(addrs, addrs_name)
+    fldMap.addInputfield(addrs, addrs_name)
+    fldMap.addInputfield(target, target_name)
+
+    column = fldMap.outputField
+    column.name, column.aliasName, column.type = target_name, target_name, type
+    fldMap.outputField = column
+
+    return fldMap
+
+def update_ABC_Layer(addrs: str) -> None:
+    """
+    Update the LiquoreLicenseLocations layer with the new addresses
+    """
+
+    target = layer
+
+    fieldMappings = arcpy.FieldMappings()
+    fieldMappings.addTable(target)
+
+    fieldMappings.addFieldMap(create_field_map("License_Type", "LicenseCode", "SHORT"))
+    fieldMappings.addFieldMap(create_field_map("License_Type", "LicenseCode", "SHORT"))
+    
+    arcpy.management.Append(addrs, target)
+
+
 def main() -> None:
 
     #Step 1: Filter CSV
     csv = filter_csv()
-    print("\n(1/6) CSV Filtered for StocktonParcelArea Addresses")
+    print("\n1: CSV Filtered for StocktonParcelArea Addresses")
 
     #Step 2: Create Locator
     locator = create_locator()
-    print("(2/6) Created Point Address Locator")
+    print("2: Created Point Address Locator")
 
     #Step 3: Geocode Addresses
     abc_addrs = geocode_addresses(csv, locator)
-    print("(3/6) Finished Geocoding Addresses")
+    print("3: Finished Geocoding Addresses")
 
     #Step 4: Extract unmatched addresses into table
     queryTable = extract_unmatched_addresses(abc_addrs)
-    print("(4/6) Created Query Table")
+    print("4: Created Query Table")
 
     #Step 5: Convert the table into an Excel Worksheet
     excel = convert_table_to_excel(queryTable, os.path.dirname(csv))
-    print("(5/6) Query Table Converted To Excel Worksheet")
+    print("5: Query Table Converted To Excel Worksheet")
     print(f"\nThe UNMATCHED ADDRESSES can be found HERE: {excel}\n")
+
+    #Step 6: Update LiquorLicenseLocations with new geocoded addresses
+    update_ABC_Layer(abc_addrs)
+    print("6: LiquorLicenseLocations Updated")
 
     #Remove intermediate layers
     os.remove(csv)
     os.remove(locator)
     arcpy.management.Delete(abc_addrs)
     arcpy.management.Delete(queryTable)
-    print("(6/6) Intermediate layers removed from File System")
+    print("7: Intermediate layers removed from File System")
     print("Finished")
 
 
