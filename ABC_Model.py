@@ -118,16 +118,18 @@ def geocode_addresses(table: str, locator: str) -> str:
     return layer
 
 
-def extract_unmatched_addresses(addrs):
+def extract_unmatched_addresses(addrs) -> None:
     """
     Extract unmatched addresses into table.
     """
 
     #Set the parameters
-    table = arcpy.env.workspace + '\\' + 'unmatched_addresses'
+    table = arcpy.env.workspace + '\\' + 'Unmatched_addresses'
+
+    where = "ABC_Geocoded_Addresses.STATUS = 'U'"
 
     #Geocode the addresses
-    arcpy.management.MakeQueryTable(addrs, table)
+    arcpy.management.MakeQueryTable(addrs, table, where_clause=where)
 
     return table
 
@@ -147,7 +149,9 @@ def main() -> None:
     print("GEOCODE DONE")
 
     #Step 4: Extract unmatched addresses into table
-    #queryTable = extract_unmatched_addresses(abc_addrs)
+    queryTable = extract_unmatched_addresses(abc_addrs)
+    print("QUERYTABLE DONE")
+    print(queryTable)
 
     #Remove intermediate layers
     # os.remove(csv)
