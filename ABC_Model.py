@@ -25,7 +25,8 @@ import Update_Liquid_Licensing as ULL
 import os
 
 print("Please select the geodatabase to access.")
-arcpy.env.workspace = filedialog.askdirectory()
+arcpy.env.workspace = r"C:\Users\ephoukong\OneDrive - City of Stockton\Desktop\Training_Data\DB01_bak_20231018.gdb"
+#arcpy.env.workspace = filedialog.askdirectory()
 layer = "LiquorLicenseLocations"
 arcpy.env.overwriteOutput = True
 
@@ -40,8 +41,9 @@ def filter_csv() -> str:
 
     #Read CSV into a dataframe
     print("Please select the CSV of liquor licenses to process.")
-    file_path = filedialog.askopenfilename()
-    csv_path = os.path.dirname(file_path) + '\\' + 'filtered_csv'
+    file_path = r"C:\Users\ephoukong\OneDrive - City of Stockton\Desktop\WeeklyExport_CSV\ABC_WeeklyDataExport.csv"
+    #file_path = filedialog.askopenfilename()
+    csv_path = os.path.dirname(file_path) + '\\' + 'filtered.csv'
     df = pd.read_csv(file_path, skiprows=1)
 
     #Ensure uniform formatting in city columns
@@ -66,22 +68,28 @@ def create_locator() -> str:
 
     #Set the parameters
     country_code = "USA"
-    reference_data = arcpy.env.workspace + '\\' + "Addresses"
-    field_mapping =   'HouseNumber FROM AddressNumber,' \
-                    + 'PrefixDirection FROM StreetDirectional,' \
-                    + 'StreetName FROM StreetName,' \
-                    + 'SuffixType FROM StreetType,' \
-                    + 'FullStreeetName FROM FullAddress,' \
-                    + 'Unit FROM Suite, City FROM City,' \
-                    + 'State FROM State'
+    reference_data = [["Addresses", "PointAddress"]]
+
+    field_mapping = ["PointAddress.HOUSE_NUMBER Addresses.AddressNumber",
+                    # "PointAddress.PREFIX_DIRECTION Addresses.StreetDirectional",
+                    "PointAddress.STREET_NAME Addresses.StreetName",
+                    # "PointAddress.SUFFIX_TYPE Addresses.StreetType",
+                    "PointAddress.FULL_STREET_NAME Addresses.FullAddress",
+                    # "PointAddress.UNIT Addresses.Suite",
+                    "PointAddress.CITY Addresses.City",
+                    "PointAddress.REGION Addresses.State"]
+    
     locator = r"C:\GIS\Project\ABCLocator.loc"
+    language = "ENG"
 
     #Delete old locator if it exists
     if os.path.exists(locator):
         os.remove(locator)
+    
+    os.makedirs(os.path.dirname(locator), exist_ok=True)
 
     #Create Locator
-    arcpy.geocoding.CreateLocator(country_code, reference_data, field_mapping, locator)
+    arcpy.geocoding.CreateLocator(country_code, reference_data, field_mapping, locator, language)
 
     return locator
 
@@ -122,21 +130,24 @@ def main() -> None:
 
     #Step 1: Filter CSV
     csv = filter_csv()
+    print("CSV DONE")
 
     #Step 2: Create Locator
     locator = create_locator()
+    print("LOCATOR DONE")
 
     #Step 3: Geocode Addresses
     abc_addrs = geocode_addresses(csv, locator)
+    print("GEOCODE DONE")
 
     #Step 4: Extract unmatched addresses into table
-    queryTable = extract_unmatched_addresses(abc_addrs)
+    #queryTable = extract_unmatched_addresses(abc_addrs)
 
     #Remove intermediate layers
-    os.remove(csv)
-    os.remove(locator)
-    os.remove(abc_addrs)
-    os.remove(queryTable)
+    # os.remove(csv)
+    # os.remove(locator)
+    # os.remove(abc_addrs)
+    # os.remove(queryTable)
 
 
 if __name__ == "__main__":
