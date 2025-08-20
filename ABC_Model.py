@@ -101,10 +101,16 @@ def geocode_addresses(table: str, locator: str) -> str:
     #Set the parameters
     fields =  'Address "Prem Addr 1" VISIBLE NONE;' \
             + 'Address2 "Prem Addr 2" VISIBLE NONE;' \
+            + 'Address3 <None> VISIBLE NONE;' \
+            + 'Neighborhood <None> VISIBLE NONE;' \
             + 'City "Prem City" VISIBLE NONE;' \
+            + 'Subregion <None> VISIBLE NONE;' \
             + 'Region District VISIBLE NONE;' \
-            + 'Postal "Prem Zip" VISIBLE NONE;'
-    layer = arcpy.env.workspace + '\\' + 'ABC_Addresses'
+            + 'Postal "Prem Zip" VISIBLE NONE;'\
+            + 'PostalExt <None> VISIBLE NONE;' \
+            + 'CountryCode <None> VISIBLE NONE;'
+    
+    layer = arcpy.env.workspace + '\\' + 'ABC_Geocoded_Addresses'
 
     #Geocode the addresses
     arcpy.geocoding.GeocodeAddresses(table, locator, fields, layer)
