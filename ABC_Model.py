@@ -193,11 +193,13 @@ def update_ABC_Layer(addrs: str) -> None:
               ("Prem_Census_Tract__", "PremiseCensusTract", "TEXT"),
               ("Type_Status", "Status", "TEXT"),]
             #   ("Shape", "Shape", "GEOMETRY")]
+    
+    schema_type = "NO_TEST"
 
     for (name, alias, type) in fields:
         fieldMappings.addFieldMap(create_field_map(name, alias, type))
 
-    #arcpy.management.Append(addrs, target)
+    arcpy.management.Append(addrs, target, schema_type, fieldMappings)
 
 
 def main() -> None:
