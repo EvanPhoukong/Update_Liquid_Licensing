@@ -20,18 +20,13 @@ General Pipeline:
 
 from tkinter import filedialog
 import pandas as pd
-import numpy as np
 import arcpy
 import os
 
 print("Please select the geodatabase to access.")
 arcpy.env.workspace = filedialog.askdirectory()
-layer = "LiquorLicenseLocations"
 arcpy.env.overwriteOutput = True
-
-#Initialize connection to layer and create update cursor
-fc = arcpy.env.workspace + '\\' + layer
-cursor = arcpy.UpdateCursor(fc)
+layer = "LiquorLicenseLocations"
 
 def filter_csv() -> str:
     """
@@ -90,6 +85,7 @@ def create_locator() -> str:
     arcpy.geocoding.CreateLocator(country_code, reference_data, field_mapping, locator, language)
 
     return locator
+
 
 def geocode_addresses(table: str, locator: str) -> str:
     """
@@ -179,6 +175,7 @@ def create_field_map(addrs_name: str, target_name: str, type: str) -> None:
     fldMap.outputField = column
 
     return fldMap
+
 
 def update_ABC_Layer(addrs: str) -> None:
     """
