@@ -25,8 +25,7 @@ import arcpy
 import os
 
 print("Please select the geodatabase to access.")
-arcpy.env.workspace = r"C:\Users\ephoukong\OneDrive - City of Stockton\Desktop\Training_Data\DB01_bak_20231018.gdb"
-#arcpy.env.workspace = filedialog.askdirectory()
+arcpy.env.workspace = filedialog.askdirectory()
 layer = "LiquorLicenseLocations"
 arcpy.env.overwriteOutput = True
 
@@ -41,8 +40,7 @@ def filter_csv() -> str:
 
     #Read CSV into a dataframe
     print("Please select the CSV of liquor licenses to process.")
-    file_path = r"C:\Users\ephoukong\OneDrive - City of Stockton\Desktop\WeeklyExport_CSV\ABC_WeeklyDataExport.csv"
-    #file_path = filedialog.askopenfilename()
+    file_path = filedialog.askopenfilename()
     csv_path = os.path.dirname(file_path) + '\\' + 'filtered.csv'
     df = pd.read_csv(file_path, skiprows=1)
 
