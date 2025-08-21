@@ -240,13 +240,14 @@ def main() -> None:
 
     #Step 6: Extracted matched addresses into table
     matchedTable = extract_matched_addresses(abc_addrs)
-    print("4: Created Matched Addresses Table")
+    print("6: Created Matched Addresses Table")
 
     #Step 7: Truncate the LiquorLicenseLocations table
-
+    arcpy.management.TruncateTable(layer)
+    print("7: Truncated LiquorLicenseLocations")
 
     #Step 8: Append geocoded addresses to LiquorLicenseLocations
-    update_ABC_Layer(abc_addrs)
+    update_ABC_Layer(matchedTable)
     print("8: LiquorLicenseLocations appended with Geocoded Addresses")
 
     #Step 9: Remove intermediate layers
