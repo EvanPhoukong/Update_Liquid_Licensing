@@ -17,7 +17,6 @@ General Pipeline:
 
 """
 
-
 from tkinter import filedialog
 import pandas as pd
 import arcpy
@@ -204,7 +203,7 @@ def update_ABC_Layer(addrs: str) -> None:
               ("Mail_State", "MailState", "TEXT"),
               ("Mail_Zip", "MailZipcode", "TEXT"),
               ("Prem_Census_Tract__", "PremiseCensusTract", "TEXT"),
-              ("License_Type", "LicenseType", "TEXT"),
+              ("Lic_or_App", "LicenseType", "TEXT"),
               ("Type_Status", "Status", "TEXT"),]
             #   ("Shape", "Shape", "GEOMETRY")]
     
