@@ -153,7 +153,8 @@ def extract_matched_addresses(addrs: str) -> None:
     """
 
     #Set the parameters
-    where_clause = "ABC_Geocoded_Addresses.STATUS = 'M'"
+    where_clause = "ABC_Geocoded_Addresses.STATUS = 'M' Or " \
+                 + "ABC_Geocoded_Addresses.STATUS = 'T'"
 
     #Query the table for unmatched addresses
     table, _ = arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
