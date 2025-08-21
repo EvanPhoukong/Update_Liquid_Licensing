@@ -255,6 +255,7 @@ def main() -> None:
     os.remove(locator)
     arcpy.management.Delete(abc_addrs)
     arcpy.management.Delete(unmatchedTable)
+    arcpy.management.Delete(matchedTable)
     print("9: Intermediate layers removed from File System")
     print("Successfully Updated LiquorLicenseLocations")
 
