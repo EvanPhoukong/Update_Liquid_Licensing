@@ -156,12 +156,13 @@ def create_field_map(addrs_name, target_name, type):
     fldMap = arcpy.FieldMap()
 
     fldMap.addInputField(addrs, addrs_name)
-    fldMap.addInputfield(addrs, addrs_name)
-    fldMap.addInputfield(target, target_name)
+    fldMap.addInputField(target, target_name)
 
     column = fldMap.outputField
     column.name, column.aliasName, column.type = target_name, target_name, type
     fldMap.outputField = column
+
+    #print(f"SUCCESS FOR {target_name}")
 
     return fldMap
 
@@ -175,10 +176,28 @@ def update_ABC_Layer(addrs: str) -> None:
     fieldMappings = arcpy.FieldMappings()
     fieldMappings.addTable(target)
 
-    fieldMappings.addFieldMap(create_field_map("License_Type", "LicenseCode", "SHORT"))
-    fieldMappings.addFieldMap(create_field_map("License_Type", "LicenseCode", "SHORT"))
-    
-    arcpy.management.Append(addrs, target)
+    fields = [("License_Type", "LicenseCode", "SHORT"),
+              ("File_Number", "FileNumber", "LONG"),
+              ("Type_Orig_Iss_Date", "OriginalIssueDate", "DATE"),
+              ("Expir_Date", "ExpirationDate", "DATE"),
+              ("DBA_Name", "PremiseName", "TEXT"),
+              ("Prem_Addr_1", "PremiseAddress", "TEXT"),
+              ("Prem_Addr_2", "PremiseAddress2", "TEXT"),
+              ("Primary_Name", "OwnerName", "TEXT"),
+              ("Prem_Zip", "PremiseZipcode", "TEXT"),
+              ("Mail_Addr_1", "MailAddress", "TEXT"),
+              ("Mail_Addr_2", "MailAddress2", "TEXT"),
+              ("Mail_City", "MailCity", "TEXT"),
+              ("Mail_State", "MailState", "TEXT"),
+              ("Mail_Zip", "MailZipcode", "TEXT"),
+              ("Prem_Census_Tract__", "PremiseCensusTract", "TEXT"),
+              ("Type_Status", "Status", "TEXT"),]
+            #   ("Shape", "Shape", "GEOMETRY")]
+
+    for (name, alias, type) in fields:
+        fieldMappings.addFieldMap(create_field_map(name, alias, type))
+
+    #arcpy.management.Append(addrs, target)
 
 
 def main() -> None:
