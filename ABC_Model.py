@@ -125,11 +125,10 @@ def extract_unmatched_addresses(addrs) -> None:
     """
 
     #Set the parameters
-    table = arcpy.env.workspace + '\\' + 'Unmatched_addresses'
     where_clause = "ABC_Geocoded_Addresses.STATUS = 'U'"
 
     #Query the table for unmatched addresses
-    arcpy.management.MakeQueryTable(addrs, table, "USE_KEY_FIELDS", where_clause=where_clause)
+    table, _ = arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
     
     return table
 
@@ -217,25 +216,31 @@ def main() -> None:
     print("3: Finished Geocoding Addresses")
 
     #Step 4: Extract unmatched addresses into table
-    queryTable = extract_unmatched_addresses(abc_addrs)
+    unmatchedTable = extract_unmatched_addresses(abc_addrs)
     print("4: Created Query Table")
 
     #Step 5: Convert the table into an Excel Worksheet
-    excel = convert_table_to_excel(queryTable, os.path.dirname(csv))
-    print("5: Query Table Converted To Excel Worksheet")
+    excel = convert_table_to_excel(unmatchedTable, os.path.dirname(csv))
+    print("5: Unmatched Addresses Table Converted To Excel Worksheet")
     print(f"\nThe UNMATCHED ADDRESSES can be found HERE: {excel}\n")
 
-    #Step 6: Update LiquorLicenseLocations with new geocoded addresses
-    update_ABC_Layer(abc_addrs)
-    print("6: LiquorLicenseLocations Updated")
+    #Step 6: Extracted matched addresses into table
+    
 
-    #Remove intermediate layers
+    #Step 7: Truncate the LiquorLicenseLocations table
+
+
+    #Step 8: Append geocoded addresses to LiquorLicenseLocations
+    update_ABC_Layer(abc_addrs)
+    print("8: LiquorLicenseLocations appended with Geocoded Addresses")
+
+    #Step 9: Remove intermediate layers
     os.remove(csv)
     os.remove(locator)
     arcpy.management.Delete(abc_addrs)
     arcpy.management.Delete(queryTable)
-    print("7: Intermediate layers removed from File System")
-    print("Finished")
+    print("9: Intermediate layers removed from File System")
+    print("Successfully Updated LiquorLicenseLocations")
 
 
 if __name__ == "__main__":
