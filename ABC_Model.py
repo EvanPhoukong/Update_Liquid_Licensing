@@ -119,7 +119,7 @@ def geocode_addresses(table: str, locator: str) -> str:
     return layer
 
 
-def extract_unmatched_addresses(addrs) -> None:
+def extract_unmatched_addresses(addrs: str) -> None:
     """
     Extract unmatched addresses into table.
     """
@@ -147,7 +147,7 @@ def convert_table_to_excel(table: str, folder: str) -> None:
     return out_table
 
 
-def extract_matched_addresses(addrs) -> None:
+def extract_matched_addresses(addrs: str) -> None:
     """
     Extract matched addresses into table.
     """
@@ -162,7 +162,10 @@ def extract_matched_addresses(addrs) -> None:
     return table
 
 
-def create_field_map(addrs_name, target_name, type):
+def create_field_map(addrs_name: str, target_name: str, type: str) -> None:
+    """
+    Create field maps give the feature attributes to combine
+    """
 
     addrs = "ABC_Geocoded_Addresses"
     target = "LiquorLicenseLocations"
@@ -185,9 +188,11 @@ def update_ABC_Layer(addrs: str) -> None:
 
     target = layer
 
+    #Create Field Mappings Object and Set Parameters
     fieldMappings = arcpy.FieldMappings()
     fieldMappings.addTable(target)
 
+    #Specify the fields to match and their corresponding type
     fields = [("License_Type", "LicenseCode", "SHORT"),
               ("File_Number", "FileNumber", "LONG"),
               ("Type_Orig_Iss_Date", "OriginalIssueDate", "DATE"),
@@ -209,9 +214,11 @@ def update_ABC_Layer(addrs: str) -> None:
     
     schema_type = "NO_TEST"
 
+    #Add field maps
     for (name, alias, type) in fields:
         fieldMappings.addFieldMap(create_field_map(name, alias, type))
 
+    #Append the geocoded addresses to LiquorLicenseLocations
     arcpy.management.Append(addrs, target, schema_type, fieldMappings)
 
 
