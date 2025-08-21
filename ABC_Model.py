@@ -147,6 +147,20 @@ def convert_table_to_excel(table: str, folder: str) -> None:
     return out_table
 
 
+def extract_matched_addresses(addrs) -> None:
+    """
+    Extract matched addresses into table.
+    """
+
+    #Set the parameters
+    where_clause = "ABC_Geocoded_Addresses.STATUS = 'M'"
+
+    #Query the table for unmatched addresses
+    table, _ = arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
+    
+    return table
+
+
 def create_field_map(addrs_name, target_name, type):
 
     addrs = "ABC_Geocoded_Addresses"
@@ -217,7 +231,7 @@ def main() -> None:
 
     #Step 4: Extract unmatched addresses into table
     unmatchedTable = extract_unmatched_addresses(abc_addrs)
-    print("4: Created Query Table")
+    print("4: Created Unmatched Addresses Table")
 
     #Step 5: Convert the table into an Excel Worksheet
     excel = convert_table_to_excel(unmatchedTable, os.path.dirname(csv))
@@ -225,7 +239,8 @@ def main() -> None:
     print(f"\nThe UNMATCHED ADDRESSES can be found HERE: {excel}\n")
 
     #Step 6: Extracted matched addresses into table
-    
+    matchedTable = extract_matched_addresses(abc_addrs)
+    print("4: Created Matched Addresses Table")
 
     #Step 7: Truncate the LiquorLicenseLocations table
 
@@ -238,7 +253,7 @@ def main() -> None:
     os.remove(csv)
     os.remove(locator)
     arcpy.management.Delete(abc_addrs)
-    arcpy.management.Delete(queryTable)
+    arcpy.management.Delete(unmatchedTable)
     print("9: Intermediate layers removed from File System")
     print("Successfully Updated LiquorLicenseLocations")
 
