@@ -157,7 +157,8 @@ def extract_matched_addresses(addrs) -> None:
 
     #Query the table for unmatched addresses
     table, _ = arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
-    
+    arcpy.management.DeleteField(table, "Status")
+
     return table
 
 
@@ -174,8 +175,6 @@ def create_field_map(addrs_name, target_name, type):
     column = fldMap.outputField
     column.name, column.aliasName, column.type = target_name, target_name, type
     fldMap.outputField = column
-
-    #print(f"SUCCESS FOR {target_name}")
 
     return fldMap
 
@@ -204,6 +203,7 @@ def update_ABC_Layer(addrs: str) -> None:
               ("Mail_State", "MailState", "TEXT"),
               ("Mail_Zip", "MailZipcode", "TEXT"),
               ("Prem_Census_Tract__", "PremiseCensusTract", "TEXT"),
+              ("License_Type", "LicenseType", "TEXT"),
               ("Type_Status", "Status", "TEXT"),]
             #   ("Shape", "Shape", "GEOMETRY")]
     
