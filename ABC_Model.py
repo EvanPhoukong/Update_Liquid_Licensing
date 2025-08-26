@@ -19,12 +19,12 @@ General Pipeline:
 
 from tkinter import filedialog
 import pandas as pd
-import requests, arcpy, zipfile, io, os
+import requests, arcpy, zipfile, io, os, urllib.request
 from pathlib import Path
-import shutil, glob
+import shutil, glob, sys
 
 print("Please select the geodatabase to access.")
-arcpy.env.workspace = filedialog.askdirectory()
+arcpy.env.workspace = r"C:\Users\ephoukong\OneDrive - City of Stockton\Desktop\Training_Data\DB01_bak_20231018.gdb" # filedialog.askdirectory()
 workspace = Path(arcpy.env.workspace)
 arcpy.env.overwriteOutput = True
 layer = "LiquorLicenseLocations"
@@ -35,21 +35,24 @@ def extract_CSV_from_link() -> str:
     Extract ABC CSV from link
     """
 
-    link = r"https://www.abc.ca.gov/wp-content/uploads/WeeklyExport_CSV.zip"
+    #Specify download url and where to save the file
+    url = r"https://www.abc.ca.gov/wp-content/uploads/WeeklyExport_CSV.zip"
+    save_to = Path(os.getcwd())
 
-    output = workspace / "ABC_Weekly_Data_Export"
-
-    os.makedirs(output, exist_ok=True)
-
-    for file in output.glob('*'):
-        os.remove(file)
-
-    req = requests.get(link, verify=False)
-    print(req.ok)
+    #Obtain the zip from the url
+    req = requests.get(url, stream=True, verify=False)
     zip = zipfile.ZipFile(io.BytesIO(req.content))
-    export_data = zip.extract(zip.namelist()[0], path=output)
-    print(export_data)
-    return export_data
+    file = zip.namelist()[0]
+
+    #Remove CSV if it already exists
+    file_path = save_to / file
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    #Extract the zip file
+    saved_csv_path = zip.extract(file, save_to)
+
+    return saved_csv_path
 
 
 def filter_csv(file_path: str) -> str:
@@ -132,7 +135,7 @@ def geocode_addresses(table: str, locator: str) -> str:
             + 'PostalExt <None> VISIBLE NONE;' \
             + 'CountryCode <None> VISIBLE NONE;'
     
-    layer = workspace / 'ABC_Geocoded_Addresses'
+    layer = str(workspace / 'ABC_Geocoded_Addresses')
     output_fields = "MINIMAL"
 
     #Geocode the addresses
@@ -161,8 +164,8 @@ def convert_table_to_excel(table: str, folder: str) -> None:
     """
 
     #Set the parameter
-    out_table = folder + '\\' + "Unmatched_Addresses.xlsx"
-    
+    out_table = str(Path(folder) / "Unmatched_Addresses.xlsx")
+
     #Convert the table into an Excel Spreadsheet
     arcpy.conversion.TableToExcel(table, out_table)
 
@@ -249,48 +252,50 @@ def update_ABC_Layer(addrs: str) -> None:
 def main() -> None:
 
     #Step 1: Extract CSV from link
-    data = extract_CSV_from_link()
+    raw_csv = extract_CSV_from_link()
+    print("\n1: Extract the CSV to be processed from the url.")
 
-    #Step 1: Filter CSV
-    csv = filter_csv(data)
-    print("\n1: CSV Filtered for StocktonParcelArea Addresses")
+    #Step 2: Filter CSV
+    filtered_csv = filter_csv(raw_csv)
+    print("2: CSV Filtered for StocktonParcelArea Addresses")
 
-    #Step 2: Create Locator
+    #Step 3: Create Locator
     locator = create_locator()
-    print("2: Created Point Address Locator")
+    print("3: Created Point Address Locator")
 
-    #Step 3: Geocode Addresses
-    abc_addrs = geocode_addresses(csv, locator)
-    print("3: Finished Geocoding Addresses")
+    #Step 4: Geocode Addresses
+    abc_addrs = geocode_addresses(filtered_csv, locator)
+    print("4: Finished Geocoding Addresses")
 
-    #Step 4: Extract unmatched addresses into table
+    #Step 5: Extract unmatched addresses into table
     unmatchedTable = extract_unmatched_addresses(abc_addrs)
-    print("4: Created Unmatched Addresses Table")
+    print("5: Created Unmatched Addresses Table")
 
-    #Step 5: Convert the table into an Excel Worksheet
+    #Step 6: Convert the table into an Excel Worksheet
     excel = convert_table_to_excel(unmatchedTable, os.path.dirname(csv))
-    print("5: Unmatched Addresses Table Converted To Excel Worksheet")
+    print("6: Unmatched Addresses Table Converted To Excel Worksheet")
     print(f"\nThe UNMATCHED ADDRESSES can be found HERE: {excel}\n")
 
-    #Step 6: Extracted matched addresses into table
+    #Step 7: Extracted matched addresses into table
     matchedTable = extract_matched_addresses(abc_addrs)
-    print("6: Created Matched Addresses Table")
+    print("7: Created Matched Addresses Table")
 
-    #Step 7: Truncate the LiquorLicenseLocations table
+    #Step 8: Truncate the LiquorLicenseLocations table
     arcpy.management.TruncateTable(layer)
-    print("7: Truncated LiquorLicenseLocations")
+    print("8: Truncated LiquorLicenseLocations")
 
-    #Step 8: Append geocoded addresses to LiquorLicenseLocations
+    #Step 9: Append geocoded addresses to LiquorLicenseLocations
     update_ABC_Layer(matchedTable)
-    print("8: LiquorLicenseLocations appended with Geocoded Addresses")
+    print("9: LiquorLicenseLocations appended with Geocoded Addresses")
 
-    #Step 9: Remove intermediate layers
-    os.remove(csv)
+    #Step 10: Remove intermediate layers
+    os.remove(raw_csv)
+    os.remove(filtered_csv)
     os.remove(locator)
     arcpy.management.Delete(abc_addrs)
     arcpy.management.Delete(unmatchedTable)
     arcpy.management.Delete(matchedTable)
-    print("9: Intermediate layers removed from File System")
+    print("10: Intermediate layers removed from File System")
     print("Successfully Updated LiquorLicenseLocations")
 
 
