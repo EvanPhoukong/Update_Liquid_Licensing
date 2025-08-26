@@ -20,11 +20,9 @@ General Pipeline:
 from tkinter import filedialog
 import pandas as pd
 import requests, arcpy, zipfile, io, os
-from pathlib import Path
 
 print("Please select the geodatabase to access.")
 arcpy.env.workspace = filedialog.askdirectory()
-workspace = Path(arcpy.env.workspace)
 arcpy.env.overwriteOutput = True
 layer = "LiquorLicenseLocations"
 
@@ -36,7 +34,7 @@ def extract_CSV_from_link() -> str:
 
     #Specify download url and where to save the file
     url = r"https://www.abc.ca.gov/wp-content/uploads/WeeklyExport_CSV.zip"
-    save_to = Path(os.getcwd())
+    save_to = os.getcwd()
 
     #Obtain the zip from the url
     req = requests.get(url, stream=True, verify=False)
@@ -44,7 +42,7 @@ def extract_CSV_from_link() -> str:
     file = zip.namelist()[0]
 
     #Remove CSV if it already exists
-    file_path = save_to / file
+    file_path = os.path.join(save_to, file)
     if os.path.exists(file_path):
         os.remove(file_path)
 
@@ -62,7 +60,7 @@ def filter_csv(file_path: str) -> str:
     #Read CSV into a dataframe
     # print("Please select the CSV of liquor licenses to process.")
     # file_path = filedialog.askopenfilename()
-    csv_path = os.path.dirname(file_path) + '\\' + 'filtered.csv'
+    csv_path = os.path.join(os.path.dirname(file_path), 'filtered.csv')
     df = pd.read_csv(file_path, skiprows=1)
 
     #Delete old csv if it exists
@@ -134,7 +132,7 @@ def geocode_addresses(table: str, locator: str) -> str:
             + 'PostalExt <None> VISIBLE NONE;' \
             + 'CountryCode <None> VISIBLE NONE;'
     
-    layer = str(workspace / 'ABC_Geocoded_Addresses')
+    layer = os.path.join(arcpy.env.workspace, 'ABC_Geocoded_Addresses')
     output_fields = "MINIMAL"
 
     #Geocode the addresses
@@ -163,7 +161,7 @@ def convert_table_to_excel(table: str, folder: str) -> None:
     """
 
     #Set the parameter
-    out_table = str(Path(folder) / "Unmatched_Addresses.xlsx")
+    out_table = os.path.join(folder, "Unmatched_Addresses.xlsx")
 
     #Convert the table into an Excel Spreadsheet
     arcpy.conversion.TableToExcel(table, out_table)
@@ -252,7 +250,7 @@ def main() -> None:
 
     #Step 1: Extract CSV from link
     raw_csv = extract_CSV_from_link()
-    print("\n1: Extract the CSV to be processed from the url.")
+    print("\n1: Extract the CSV to be processed from the url")
 
     #Step 2: Filter CSV
     filtered_csv = filter_csv(raw_csv)
