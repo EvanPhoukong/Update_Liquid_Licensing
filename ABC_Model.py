@@ -19,12 +19,11 @@ General Pipeline:
 
 from tkinter import filedialog
 import pandas as pd
-import requests, arcpy, zipfile, io, os, urllib.request
+import requests, arcpy, zipfile, io, os
 from pathlib import Path
-import shutil, glob, sys
 
 print("Please select the geodatabase to access.")
-arcpy.env.workspace = r"C:\Users\ephoukong\OneDrive - City of Stockton\Desktop\Training_Data\DB01_bak_20231018.gdb" # filedialog.askdirectory()
+arcpy.env.workspace = filedialog.askdirectory()
 workspace = Path(arcpy.env.workspace)
 arcpy.env.overwriteOutput = True
 layer = "LiquorLicenseLocations"
@@ -272,7 +271,7 @@ def main() -> None:
     print("5: Created Unmatched Addresses Table")
 
     #Step 6: Convert the table into an Excel Worksheet
-    excel = convert_table_to_excel(unmatchedTable, os.path.dirname(csv))
+    excel = convert_table_to_excel(unmatchedTable, os.path.dirname(filtered_csv))
     print("6: Unmatched Addresses Table Converted To Excel Worksheet")
     print(f"\nThe UNMATCHED ADDRESSES can be found HERE: {excel}\n")
 
