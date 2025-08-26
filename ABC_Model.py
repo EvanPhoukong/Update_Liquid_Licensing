@@ -20,9 +20,12 @@ General Pipeline:
 from tkinter import filedialog
 import pandas as pd
 import requests, arcpy, zipfile, io, os
+from pathlib import Path
+import shutil, glob
 
 print("Please select the geodatabase to access.")
 arcpy.env.workspace = filedialog.askdirectory()
+workspace = Path(arcpy.env.workspace)
 arcpy.env.overwriteOutput = True
 layer = "LiquorLicenseLocations"
 
@@ -34,14 +37,19 @@ def extract_CSV_from_link() -> str:
 
     link = r"https://www.abc.ca.gov/wp-content/uploads/WeeklyExport_CSV.zip"
 
-    output = arcpy.env.workspace + '\\' + "ABC_Weekly_Export.csv"
+    output = workspace / "ABC_Weekly_Data_Export"
+
+    os.makedirs(output, exist_ok=True)
+
+    for file in output.glob('*'):
+        os.remove(file)
 
     req = requests.get(link, verify=False)
     print(req.ok)
     zip = zipfile.ZipFile(io.BytesIO(req.content))
-    zip.extractall(output)
-
-    return output
+    export_data = zip.extract(zip.namelist()[0], path=output)
+    print(export_data)
+    return export_data
 
 
 def filter_csv(file_path: str) -> str:
@@ -54,6 +62,10 @@ def filter_csv(file_path: str) -> str:
     # file_path = filedialog.askopenfilename()
     csv_path = os.path.dirname(file_path) + '\\' + 'filtered.csv'
     df = pd.read_csv(file_path, skiprows=1)
+
+    #Delete old csv if it exists
+    if os.path.exists(csv_path):
+        os.remove(csv_path)
 
     #Ensure uniform formatting in city columns
     df['Mail City'] = df['Mail City'].str.upper()
@@ -120,7 +132,7 @@ def geocode_addresses(table: str, locator: str) -> str:
             + 'PostalExt <None> VISIBLE NONE;' \
             + 'CountryCode <None> VISIBLE NONE;'
     
-    layer = arcpy.env.workspace + '\\' + 'ABC_Geocoded_Addresses'
+    layer = workspace / 'ABC_Geocoded_Addresses'
     output_fields = "MINIMAL"
 
     #Geocode the addresses
