@@ -37,8 +37,9 @@ def extract_CSV_from_link() -> str:
     save_to = os.getcwd()
 
     #Obtain the zip from the url
-    req = requests.get(url, stream=True, verify=False)
-    zip = zipfile.ZipFile(io.BytesIO(req.content))
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    res = requests.get(url, stream=True, verify=False, headers=headers)
+    zip = zipfile.ZipFile(io.BytesIO(res.content))
     file = zip.namelist()[0]
 
     #Remove CSV if it already exists
