@@ -59,8 +59,6 @@ def filter_csv(file_path: str) -> str:
     """
 
     #Read CSV into a dataframe
-    # print("Please select the CSV of liquor licenses to process.")
-    # file_path = filedialog.askopenfilename()
     csv_path = os.path.join(os.path.dirname(file_path), 'filtered.csv')
     df = pd.read_csv(file_path, skiprows=1)
 
@@ -151,9 +149,9 @@ def extract_unmatched_addresses(addrs: str) -> None:
     where_clause = "ABC_Geocoded_Addresses.STATUS = 'U'"
 
     #Query the table for unmatched addresses
-    table, _ = arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
+    table, count= arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
     
-    return table
+    return table, count
 
 
 def convert_table_to_excel(table: str, folder: str) -> None:
@@ -180,10 +178,10 @@ def extract_matched_addresses(addrs: str) -> None:
                  + "ABC_Geocoded_Addresses.STATUS = 'T'"
 
     #Query the table for unmatched addresses
-    table, _ = arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
+    table, count = arcpy.management.SelectLayerByAttribute(addrs, where_clause=where_clause)
     arcpy.management.DeleteField(table, "Status")
 
-    return table
+    return table, count
 
 
 def create_field_map(addrs_name: str, target_name: str, type: str) -> None:
@@ -266,8 +264,8 @@ def main() -> None:
     print("4: Finished Geocoding Addresses")
 
     #Step 5: Extract unmatched addresses into table
-    unmatchedTable = extract_unmatched_addresses(abc_addrs)
-    print("5: Created Unmatched Addresses Table")
+    unmatchedTable, count = extract_unmatched_addresses(abc_addrs)
+    print(f"5: Created Unmatched Addresses Table. The total number of unmatched addresses is {count}.")
 
     #Step 6: Convert the table into an Excel Worksheet
     excel = convert_table_to_excel(unmatchedTable, os.path.dirname(filtered_csv))
@@ -275,8 +273,8 @@ def main() -> None:
     print(f"\nThe UNMATCHED ADDRESSES can be found HERE: {excel}\n")
 
     #Step 7: Extracted matched addresses into table
-    matchedTable = extract_matched_addresses(abc_addrs)
-    print("7: Created Matched Addresses Table")
+    matchedTable, count = extract_matched_addresses(abc_addrs)
+    print(f"7: Created Matched Addresses Table. The total number of matched addresses is {count}.")
 
     #Step 8: Truncate the LiquorLicenseLocations table
     arcpy.management.TruncateTable(layer)
